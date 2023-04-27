@@ -4,6 +4,7 @@ require('../models/connection');
 const { checkBody } = require('../modules/checkBody');
 
 const Tweet = require('../models/tweets');
+const Trend = require('../models/trends');
 
 
 const fetch = require('node-fetch');
@@ -32,33 +33,101 @@ router.post('/add', (req, res) => {
   });
 
   newTweet.save().then(newDoc => {
-    if(newDoc !== null){
-      res.json({ result: true, message: 'Tweet enregistré' });
+    if (newDoc !== null) {
+      if (newDoc.text.includes('#')) {
+        let regex = /#[^#]*\s/gi;
+        const tab = newDoc.text.match(regex);
+        if (tab !== null) {
+          for (const a of tab) {
+            Trend.findOne({ hashtag: a.slice(0, -1) })
+              .then(data => {
+                if (!data) {
+                  const newTrend = new Trend({
+                    hashtag: a.slice(0, -1),
+                    count: 1,
+                  });
+                  newTrend.save()
+                    .then();
+                }
+                else {
+                  Trend.updateOne({ hashtag: a.slice(0, -1) }, { count: data.count + 1 })
+                    .then();
+                }
+              })
+          }
+          res.json({ result: true });
+        }
+        else {
+          res.json({ result: tab });
+          return;
+        }
+      }
+      else {
+        res.json({ result: true, message: 'Tweet enregistré' });
+        return;
+      }
     }
-    else{
+    else {
       res.json({ result: false, error: 'Erreur innatendue' });
+      return;
     }
   });
 });
 
 
 router.delete('/delete/:id', (req, res) => {
-  Tweet.deleteOne({_id : req.params.id })
-  .then(res.json({result : true , message : 'Tweet supprimé'}));
+  Tweet.findById(req.params.id)
+    .then(newDoc => {
+      if (newDoc !== null) {
+        if (newDoc.text.includes('#')) {
+          let regex = /#[^#]*\s/gi;
+          const tab = newDoc.text.match(regex);
+          for (const a of tab) {
+            Trend.findOne({ hashtag: a.slice(0, -1) })
+              .then(data => {
+                Trend.updateOne({ hashtag: a.slice(0, -1) }, { count: data.count - 1 })
+                .then();
+                // .then(res.json({ result: true, message: `${data.hashtag} : ${data.count-1}` }));
+              })
+          }
+          Tweet.deleteOne({ _id: req.params.id })
+            .then(res.json({ result: true, message: 'Tweet supprimé et trend maj' }))
+        }
+        else {
+          Tweet.deleteOne({ _id: req.params.id })
+            .then(res.json({ result: true, message: 'Tweet supprimé' }))
+        }
+      }
+      else {
+        res.json({ result: false, error: 'Tweet inexistant' });
+      }
+    })
 });
 
 
 //Route pour afficher les tweets via leur trend
 
-router.get('/:hashtag', (req, res) => {
+router.get('/trends/:hashtag', (req, res) => {
   const regex = new RegExp('#' + req.params.hashtag, 'ig');
-  Tweet.find({ text: {$regex: regex} })
+  Tweet.find({ text: { $regex: regex } })
     .then(data => {
       if (data === null) {
-        res.json({ result: false, error: 'Erreur innatendue' });
+        res.json({ result: false, error: 'Erreur inattendue' });
       }
       else {
         res.json({ result: true, tweets: data });
+      }
+    });
+});
+
+router.get('/trends', (req, res) => {
+  Trend.find()
+    .then(data => {
+      if (!data) {
+        res.json({ result: false, error: 'Problems' });
+      }
+      else {
+        res.json({ result: true, trends: data });
       }
     });
 });
