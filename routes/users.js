@@ -8,7 +8,7 @@ const uid2 = require('uid2');
 const bcrypt = require('bcrypt');
 
 router.post('/signup', (req, res) => {
-  if (!checkBody(req.body, ['username', 'password'])) {
+  if (!checkBody(req.body, ['firstname', 'username', 'password'])) {
     res.json({ result: false, error: 'Missing or empty fields' });
     return;
   }
@@ -19,10 +19,10 @@ router.post('/signup', (req, res) => {
       const hash = bcrypt.hashSync(req.body.password, 10);
 
       const newUser = new User({
+        firstname: req.body.firstname,
         username: req.body.username,
         password: hash,
         token: uid2(32),
-        canBookmark: true,
       });
 
       newUser.save().then(newDoc => {
@@ -50,14 +50,14 @@ router.post('/signin', (req, res) => {
   });
 });
 
-router.get('/canBookmark/:token', (req, res) => {
-  User.findOne({ token: req.params.token }).then(data => {
-    if (data) {
-      res.json({ result: true, canBookmark: data.canBookmark });
-    } else {
-      res.json({ result: false, error: 'User not found' });
-    }
-  });
-});
+// router.get('/canBookmark/:token', (req, res) => {
+//   User.findOne({ token: req.params.token }).then(data => {
+//     if (data) {
+//       res.json({ result: true, canBookmark: data.canBookmark });
+//     } else {
+//       res.json({ result: false, error: 'User not found' });
+//     }
+//   });
+// });
 
 module.exports = router;
