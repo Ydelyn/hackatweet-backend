@@ -10,7 +10,7 @@ const Trend = require('../models/trends');
 const fetch = require('node-fetch');
 
 router.get('/', (req, res) => {
-  Tweet.find().sort({_id: -1}).limit(5)
+  Tweet.find().populate('author').sort({_id: -1}).limit(5)
     .then(data => {
       if (!data) {
         res.json({ result: false, error: 'Problems' });
