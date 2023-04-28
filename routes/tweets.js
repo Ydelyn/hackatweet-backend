@@ -136,7 +136,7 @@ router.get('/like/remove/:id', (req, res) => {
 //Route pour afficher les tweets via leur trend
 
 router.get('/trend/:hashtag', (req, res) => {
-  const regex = new RegExp('#' + req.params.hashtag, 'ig');
+  const regex = new RegExp('#' + req.params.hashtag + ' ', 'ig');
   Tweet.find({ text: { $regex: regex } })
     .then(data => {
       if (data === null) {
