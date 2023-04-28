@@ -137,7 +137,7 @@ router.get('/like/remove/:id', (req, res) => {
 
 router.get('/trend/:hashtag', (req, res) => {
   const regex = new RegExp('#' + req.params.hashtag, 'ig');
-  Tweet.find({ text: { $regex: regex } }).populate('author')
+  Tweet.find({ text: { $regex: regex } }).populate('author').sort({_id: -1})
     .then(data => {
       if (data === null) {
         res.json({ result: false, error: 'Erreur inattendue' });
