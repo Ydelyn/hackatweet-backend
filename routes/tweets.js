@@ -10,7 +10,7 @@ const Trend = require('../models/trends');
 const fetch = require('node-fetch');
 
 router.get('/', (req, res) => {
-  Tweet.find()
+  Tweet.find().sort({_id: -1}).limit(5)
     .then(data => {
       if (!data) {
         res.json({ result: false, error: 'Problems' });
@@ -29,6 +29,7 @@ router.post('/add', (req, res) => {
 
   const newTweet = new Tweet({
     text: req.body.text,
+    nb_likes: 0,
     author: req.body.author,
   });
 
@@ -91,11 +92,11 @@ router.delete('/delete/:id', (req, res) => {
               })
           }
           Tweet.deleteOne({ _id: req.params.id })
-            .then(res.json({ result: true, message: 'Tweet supprimé et trend maj' }))
+            .then(res.json({ result: true, message: 'Tweet supprimé et trend maj', id: req.params.id }))
         }
         else {
           Tweet.deleteOne({ _id: req.params.id })
-            .then(res.json({ result: true, message: 'Tweet supprimé' }))
+            .then(res.json({ result: true, message: 'Tweet supprimé', id: req.params.id }))
         }
       }
       else {
@@ -104,6 +105,32 @@ router.delete('/delete/:id', (req, res) => {
     })
 });
 
+router.get('/like/add/:id', (req, res) => {
+  Tweet.findById(req.params.id)
+  .then(data => {
+    if(data){
+      Tweet.updateOne({_id: req.params.id}, {nb_likes: data.nb_likes +1})
+      .then(res.json({ result: true, message: 'Like +1' }))
+    }
+    else{
+      res.json({ result: false, message: 'Pas de tweet associé à cet ID' })
+    }
+  })
+})
+
+
+router.get('/like/remove/:id', (req, res) => {
+  Tweet.findById(req.params.id)
+  .then(data => {
+    if(data){
+      Tweet.updateOne({_id: req.params.id}, {nb_likes: data.nb_likes -1})
+      .then(res.json({ result: true, message: 'Like -1' }))
+    }
+    else{
+      res.json({ result: false, message: 'Pas de tweet associé à cet ID' })
+    }
+  })
+})
 
 //Route pour afficher les tweets via leur trend
 
