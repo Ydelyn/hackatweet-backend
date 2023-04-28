@@ -10,7 +10,7 @@ const Trend = require('../models/trends');
 const fetch = require('node-fetch');
 
 router.get('/', (req, res) => {
-  Tweet.find().populate('author').sort({_id: -1}).limit(5)
+  Tweet.find().populate('author').sort({_id: -1}).limit(10)
     .then(data => {
       if (!data) {
         res.json({ result: false, error: 'Problems' });
@@ -30,6 +30,7 @@ router.post('/add', (req, res) => {
   const newTweet = new Tweet({
     text: req.body.text,
     nb_likes: 0,
+    date: new Date(),
     author: req.body.author,
   });
 
